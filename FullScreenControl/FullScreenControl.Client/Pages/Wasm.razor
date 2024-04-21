@@ -1,10 +1,14 @@
 ﻿@page "/wasm"
 
-@rendermode InteractiveWebAssembly
+@rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
 
 <PageTitle>WASM</PageTitle>
 
 <h1>Web Assembly</h1>
+
+<button is="fullscreen-control">wasm-test</button>
+
+<button is="fullscreen-control" enterText="enter" exitText="exit" >wasm-test</button>
 
 @code {
 
