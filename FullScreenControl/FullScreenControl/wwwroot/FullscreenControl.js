@@ -1,28 +1,50 @@
+// Copyright 2024 Hugh Maaskant
+// License: MIT - https://opensource.org/license/mit 
+
 "use strict";
 
-// Create a class for the element
+// A Custom HTML element (component) that can put the browser in fullscreen mode and back.
+
+// Also see: https://www.w3docs.com/learn-javascript/custom-elements.html 
+// The component extends the HTMLButtonElement and binds the click event to toggling
+// the browser's fullscreen mode on the main window. 
+// The component has two observed Attributes: enterHTML and exitHTML that will set
+// the button's innerHTML when in non-fullscreen and fullscreen mode respectively.
+// The component registers an event handler to
 class FullscreenControl extends HTMLButtonElement {
     
-    static observedAttributes = ["enterText" , "exitText"];
+    static observedAttributes = ["enterHTML" , "exitHTML"];
+    
+    // preserves the fullscreenchange event handler that is registered on document so that it can be removed
+    handlerRef = undefined;
     
     constructor() {
         // Always call super first in constructor
         super();
         
         this.addEventListener('click', this.#toggleFullscreen);
-        // console.log("FullscreenControl element constructed")
+        
+        // https://stackoverflow.com/questions/43727516/how-adding-event-handler-inside-a-class-with-a-class-method-as-the-callback
+        const that = this;
+        this.handlerRef = function(event) { that.#fullscreenChangedHandler(event) }; 
+        document.addEventListener("fullscreenchange", this.handlerRef);
+        console.log("FullscreenControl element constructed")
     }
 
     connectedCallback() {
-        // console.log("FullscreenControl element added to page.");
+        console.log("FullscreenControl element added to page.");
+        console.log("enterHTML =", this.getAttribute('enterHTML'));
+        console.log("extHTML =", this.getAttribute('exitHTML'));
         
-        this.enterText = this.getAttribute('enterText') || "Enter Fullscreen";
-        this.exitText = this.getAttribute('exitText') || "Exit Fullscreen";
+        this.enterHTML = this.getAttribute('enterHTML') || "Enter Fullscreen";
+        this.exitHTML = this.getAttribute('exitHTML') || "Exit Fullscreen";
         
-        this.updateInnerText();
+        this.innerHTML = this.isFullscreen() ? this.exitHTML : this.enterHTML;
     }
 
     disconnectedCallback() {
+        document.removeEventListener("fullscreenchange", this.handlerRef);
+        this.removeEventListener('click', this.#toggleFullscreen);
         console.log("FullscreenControl element removed from page.");
     }
 
@@ -31,39 +53,43 @@ class FullscreenControl extends HTMLButtonElement {
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-        console.log(`Attribute ${name} has changed.`);
+        console.log("Attribute", name, "has changed.");
         
-        if (name === 'enterText')
+        if (name === 'enterHTML')
         {
-            this.enterTextVal = newValue;
+            this.enterHTML = newValue;
         }
         
-        if (name === 'exitText')
+        if (name === 'exitHTML')
         {
-            this.exitTextVal = newValue;
+            this.exitHTML = newValue;
         }
     }
 
+    // Returns true iff the browser is in fullscreen mode
     isFullscreen() {
-        // console.log("isFullscreen");
+        console.log("isFullscreen");
         // check if we are on Safari as it needs a prefix :-( ...
         let safari = navigator.userAgent.indexOf("Safari") > -1;
         // Discard Safari since it is also matched by Chrome
         if ((navigator.userAgent.indexOf("Chrome") > -1) && safari) safari = false;
-        // console.log("On Safari => " + safari);
+        console.log("On Safari => ", safari);
         if (safari) {
             return document.webkitFullscreenElement !== null;
         }
         return document.fullscreenElement !== null;
     }
 
-    updateInnerText() {
-        this.innerText = this.isFullscreen() ? this.exitText : this.enterText;
+    // Update the button's innerHTML to reflect the new fullscreen mode
+    #fullscreenChangedHandler(event) {
+        const fullscreen = this.isFullscreen();
+        console.log("#fullscreenChangedHandler", fullscreen ? 'Entered Fullscreen' : 'Exited Fullscreen');
+        this.innerHTML = fullscreen ? this.exitHTML : this.enterHTML;
     }
-
-    // Enter Fullscreen
+    
+    // Enter Fullscreen mode
     #enterFullscreen() {
-        // console.log("enterFullscreen");
+        console.log("enterFullscreen");
         const elem = document.documentElement;
         if (elem.requestFullscreen) {
             elem.requestFullscreen();
@@ -73,12 +99,12 @@ class FullscreenControl extends HTMLButtonElement {
             elem.mozRequestFullScreen();
         } else if (elem.msRequestFullscreen) { /* IE11 */
             elem.msRequestFullscreen();
-        } else console.error("enterFullscreen failed");
+        } else console.error("#enterFullscreen failed");
     }
 
-    // Exit Fullscreen
+    // Exit Fullscreen mode
     #exitFullscreen() {
-        // console.log("exitFullscreen");
+        console.log("exitFullscreen");
         const elem = document;
         if (elem.exitFullscreen) {
             elem.exitFullscreen();
@@ -88,46 +114,23 @@ class FullscreenControl extends HTMLButtonElement {
             elem.mozCancelFullScreen();
         } else if (elem.msExitFullscreen) { /* IE11 */
             elem.msExitFullscreen();
-        } else console.error("exitFullscreen failed");
+        } else console.error("#exitFullscreen failed");
     }
     
+    // Toggle the fullscreen mode
     #toggleFullscreen() {
-        // console.log("toggleFullscreen");
+        console.log("toggleFullscreen");
         if (this.isFullscreen())
         {
             this.#exitFullscreen();
-            // this.innerText = this.enterText;
         }
         else
         {
             this.#enterFullscreen();
-            // this.innerText = this.exitText;
         }
     }
 }
 
+// Register the custom element
 customElements.define("fullscreen-control", FullscreenControl, {extends: 'button'});
-
-addEventListener("fullscreenchange", (event) => {
-    /*
-    if (document.fullscreenElement) {
-        console.log('Entered Fullscreen');
-    } else {
-        console.log('Exited Fullscreen');
-    }
-    */
-    
-    let elements = document.getElementsByTagName('button');
-    
-    // console.log('Counted', elements.length, 'buttons');
-
-    for (let i = 0; i < elements.length; i++) {
-        let button = elements.item(i);
-        if (button instanceof FullscreenControl) {
-            button.updateInnerText();
-            // console.log('innerText set');
-        }
-    }
-    
-});
 
