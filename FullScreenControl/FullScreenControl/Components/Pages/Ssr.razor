@@ -6,10 +6,14 @@
 
 <h1>Server Side Rendering</h1>
 
-<button is="fullscreen-control">ssr-test</button>
+<button id="fs-control-1" is="fullscreen-control" enterHTML="ENTER" exitHTML="EXIT">wasm-test 1</button>
 
-<button is="fullscreen-control" enterText="en" exitText="ex" >wasm-test</button>
+<button id="fs-control-2" is="fullscreen-control" enterHTML="@_enterText2" exitHTML="@_exitText2">wasm-test 2</button>
+
 
 @code {
-
+    private string _enterText1 = "ENTER";
+    private string _exitText1 = "EXIT";
+    private string _enterText2 = "enter";
+    private string _exitText2 = "exit";
 }

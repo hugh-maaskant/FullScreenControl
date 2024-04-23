@@ -2,15 +2,50 @@
 
 @rendermode @(new InteractiveWebAssemblyRenderMode(prerender: false))
 
+@inject IJSRuntime JS;
+
 <PageTitle>WASM</PageTitle>
 
 <h1>Web Assembly</h1>
 
-<button is="fullscreen-control">wasm-test</button>
+<button id="fs-control-1" is="fullscreen-control" enterHTML="ENTER" exitHTML="EXIT">wasm-test 1</button>
 
-<button is="fullscreen-control" enterText="enter" exitText="exit" >wasm-test</button>
+<button id="fs-control-2" is="fullscreen-control" enterHTML="@_enterText2" exitHTML="@_exitText2">wasm-test 2</button>
+
+<p>Change the button text:</p>
+
+<button @onclick="Update">Update fullscreen button text</button>
 
 @code {
+    private int _count;
+    private string _enterText1 = "ENTER";
+    private string _exitText1 = "EXIT";
+    private string _enterText2 = "enter";
+    private string _exitText2 = "exit";
 
+    private Task Update()
+    {
+        Console.WriteLine("Updating button text from C#...");
+        
+        switch (_count % 4)
+        {
+            case 0:
+                _enterText1 = $"{_enterText1}.";
+                break;
+            case 1:
+                _exitText1 = $"{_exitText1}.";
+                break;
+            case 2:
+                _enterText2 = $"{_enterText2}.";
+                break;
+            case 3:
+                _exitText2 = $"{_exitText2}.";
+                break;
+        }
+
+        _count++;
+        
+        return Task.CompletedTask;
+    }
 
 }
