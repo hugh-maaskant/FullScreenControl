@@ -13,7 +13,7 @@
 // The component registers an event handler to
 class FullscreenControl extends HTMLButtonElement {
     
-    static observedAttributes = ["enterHTML" , "exitHTML"];
+    static observedAttributes = ["data-enter-html" , "data-exit-html"];
     
     // preserves the fullscreenchange event handler that is registered on document so that it can be removed
     handlerRef = undefined;
@@ -22,29 +22,27 @@ class FullscreenControl extends HTMLButtonElement {
         // Always call super first in constructor
         super();
         
-        this.addEventListener('click', this.#toggleFullscreen);
-        
         // https://stackoverflow.com/questions/43727516/how-adding-event-handler-inside-a-class-with-a-class-method-as-the-callback
         const that = this;
         this.handlerRef = function(event) { that.#fullscreenChangedHandler(event) }; 
-        document.addEventListener("fullscreenchange", this.handlerRef);
         console.log("FullscreenControl element constructed")
     }
 
     connectedCallback() {
         console.log("FullscreenControl element added to page.");
-        console.log("enterHTML =", this.getAttribute('enterHTML'));
-        console.log("extHTML =", this.getAttribute('exitHTML'));
         
-        this.enterHTML = this.getAttribute('enterHTML') || "Enter Fullscreen";
-        this.exitHTML = this.getAttribute('exitHTML') || "Exit Fullscreen";
+        this.enterhtml = this.getAttribute('data-enter-html') || "Enter Fullscreen";
+        this.exithtml = this.getAttribute('data-exit-html') || "Exit Fullscreen";
         
-        this.innerHTML = this.isFullscreen() ? this.exitHTML : this.enterHTML;
+        this.innerHTML = this.isFullscreen() ? this.exithtml : this.enterhtml;
+
+        document.addEventListener("fullscreenchange", this.handlerRef);
+        this.addEventListener('click', this.#toggleFullscreen);
     }
 
     disconnectedCallback() {
-        document.removeEventListener("fullscreenchange", this.handlerRef);
         this.removeEventListener('click', this.#toggleFullscreen);
+        document.removeEventListener("fullscreenchange", this.handlerRef);
         console.log("FullscreenControl element removed from page.");
     }
 
@@ -53,16 +51,16 @@ class FullscreenControl extends HTMLButtonElement {
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
-        console.log("Attribute", name, "has changed.");
+        console.log("Attribute", name, "has changed from", oldValue, "to", newValue);
         
-        if (name === 'enterHTML')
+        if (name === 'data-enter-html')
         {
-            this.enterHTML = newValue;
+            this.enterhtml = newValue;
         }
         
-        if (name === 'exitHTML')
+        if (name === 'data-exit-html')
         {
-            this.exitHTML = newValue;
+            this.exithtml = newValue;
         }
     }
 
@@ -84,7 +82,7 @@ class FullscreenControl extends HTMLButtonElement {
     #fullscreenChangedHandler(event) {
         const fullscreen = this.isFullscreen();
         console.log("#fullscreenChangedHandler", fullscreen ? 'Entered Fullscreen' : 'Exited Fullscreen');
-        this.innerHTML = fullscreen ? this.exitHTML : this.enterHTML;
+        this.innerHTML = fullscreen ? this.exithtml : this.enterhtml;
     }
     
     // Enter Fullscreen mode
